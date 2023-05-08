@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <link rel="stylesheet" href={{ url_for("static", filename="style.css") }} />
+    <script defer src={{ url_for("static", filename="/libs/py-script/pyscript.js") }}></script>
+</head>
+<body>
+    <py-config style="display:none">
+        [[fetch]]
+        from = 'http://127.0.0.1:5000/libs/'
+        files = ["todo.py"]
+    </py-config>
+    
+    <header class="container">
+        <h1 class="center-align">ToDo list</h1>
+    </header>
+    <section class="container">
+        Create tasks
+        <div>
+            <input type="text" id="task-name" class="py-input" placeholder="Type task name">
+        </div>
+        <div>
+            <input type="text" id="task-description" class="py-input" placeholder="Task description">
+        </div>
+        <div>
+            <button py-click="add_task()" class='waves-effect waves-light btn'> Add task</button>
+        </div>
+        <div>
+            <ul id="all-tasks">
+
+            </ul>
+        </div>
+    </section>
+
+    <py-script>
+        from js import createPyOnClick
+        from todo import Task
+        from pyscript import Element
+ 
+        def add_task():
+
+            task_name = Element("task-name").element.value
+            task_description = Element("task-description").element.value
+            
+            taskobj = Task(task_name, task_description)
+            taskobj.add_task()
+            
+            tasks = Element("all-tasks")
+            tasks.clear()
+            tasks = tasks.element
+            
+            for taskdict in taskobj.todo:
+                tasks.innerHTML += f"""
+                <li class="row">
+                    <div class="col s12 center-align">
+                        
+                            <h3>  {taskdict["id"] + 1}  {taskdict["name"]}</h3>  
+                        
+                            <p class="description">
+                                {taskdict["description"]}
+                            </p> 
+                       
+                            Start: {taskdict["time_start"]}
+                        
+                            <p>
+                                <button id={taskdict["id"]} value={taskdict["id"]} class="center-align waves-effect waves-light btn"> 
+                                    Done 
+                                </button> 
+                            </p>
+                    </div>
+                </li> """
+                createPyOnClick( taskdict["id"] )
+
+        def remove_task(id):
+            Task.remove_task(id)
+
+    </py-script>
+    <script>
+
+        function createPyOnClick( id ) {
+            var allTasks = document.getElementById("all-tasks");
+            var allTaskHTMLCollection = allTasks.children;
+
+            for(var i = 0; i < allTaskHTMLCollection.length; i++) {
+                
+                allTaskHTMLCollection[i].children[0].children[2].children[0].addEventListener('click', (event) => {
+                    var remove_task = pyscript.interpreter.globals.get("remove_task")
+                    remove_task(event.target.id)
+                    event.target.parentElement.parentElement.remove();
+                })
+            }
+
+        }
+
+    </script>    
+</body>
+</html>
